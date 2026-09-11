@@ -1595,155 +1595,343 @@ Wispers Glow Hydrating and Brightening Body Lotion (Right): A 500ml body lotion 
     </div>
   </footer>
 
+
   <script>
-    // ---- Build WhatsApp links for every product card ----
+    // ============================================================
+    // WHATSAPP PRODUCT LINKS
+    // ============================================================
+
     const WA_NUMBER = "2349032063444";
     const MAX_DESCRIPTION_WORDS = 20;
 
-    document.querySelectorAll('.card[data-product]').forEach(card => {
-      const link = card.querySelector('.know-more');
-      const descriptionEl = card.querySelector('.card-description');
-      const toggleBtn = card.querySelector('.description-toggle');
-      const fullText = (card.getAttribute('data-description') || descriptionEl?.textContent.trim() || '').trim();
-      const words = fullText.split(/\s+/).filter(Boolean);
-      const isLong = words.length > MAX_DESCRIPTION_WORDS;
-      const shortText = isLong ? words.slice(0, MAX_DESCRIPTION_WORDS).join(' ') + '...' : fullText;
+    document.querySelectorAll(".card").forEach(card => {
 
-      const getCurrentProduct = () => {
-        const fromData = card.getAttribute('data-product')?.trim();
-        const fromTitle = card.querySelector('h3')?.textContent.trim();
-        return (fromData || fromTitle || 'this product').trim();
+      const whatsappButton = card.querySelector(".know-more");
+      const productTitle = card.querySelector("h3");
+      const priceElement = card.querySelector(".price");
+
+      const descriptionEl = card.querySelector(".card-description");
+      const toggleBtn = card.querySelector(".description-toggle");
+
+      // ------------------------------------------------------------
+      // PRODUCT INFORMATION
+      // ------------------------------------------------------------
+
+      // Always use the product name displayed on the card
+      const getProductName = () => {
+        return productTitle
+          ? productTitle.textContent.replace(/\s+/g, " ").trim()
+          : "this product";
       };
 
-      const getCurrentPrice = () => {
-        const visiblePrice = card.querySelector('.price')?.textContent.trim();
-        const fromData = card.getAttribute('data-price')?.trim();
-        const finalPrice = (visiblePrice || fromData || '').trim();
-        if (finalPrice) {
-          card.setAttribute('data-price', finalPrice);
-        }
-        return finalPrice;
+      // Always use the price displayed on the card
+      const getProductPrice = () => {
+        return priceElement
+          ? priceElement.textContent.replace(/\s+/g, " ").trim()
+          : "";
       };
 
-      const buildMessage = () => {
-        const product = getCurrentProduct();
-        const price = getCurrentPrice();
-        return `Hi, I'd like to know more about the ${product}${price ? ' (' + price + ')' : ''}.`;
+      // ------------------------------------------------------------
+      // WHATSAPP MESSAGE
+      // ------------------------------------------------------------
+
+      const buildWhatsAppMessage = () => {
+        const productName = getProductName();
+        const price = getProductPrice();
+
+        return `Hello Wispers Glow! 👋
+
+I'd like to order:
+
+Product: ${productName}
+Price: ${price}
+
+Please let me know the next steps.`;
       };
+
+      // ------------------------------------------------------------
+      // DESCRIPTION
+      // ------------------------------------------------------------
 
       if (descriptionEl) {
-        descriptionEl.textContent = shortText;
-      }
 
-      if (toggleBtn) {
-        if (!isLong) {
-          toggleBtn.style.display = 'none';
-        } else {
-          toggleBtn.addEventListener('click', () => {
-            const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-            descriptionEl.textContent = expanded ? shortText : fullText;
-            toggleBtn.textContent = expanded ? 'Read more' : 'Show less';
-            toggleBtn.setAttribute('aria-expanded', String(!expanded));
-          });
+        const fullText = (
+          card.getAttribute("data-description") ||
+          descriptionEl.textContent ||
+          ""
+        ).trim();
+
+        const words = fullText
+          .split(/\s+/)
+          .filter(Boolean);
+
+        const isLong = words.length > MAX_DESCRIPTION_WORDS;
+
+        const shortText = isLong
+          ? words.slice(0, MAX_DESCRIPTION_WORDS).join(" ") + "..."
+          : fullText;
+
+        // Show shortened description initially
+        descriptionEl.textContent = shortText;
+
+        // Read more / Show less
+        if (toggleBtn) {
+
+          if (!isLong) {
+            toggleBtn.style.display = "none";
+          } else {
+
+            toggleBtn.addEventListener("click", () => {
+
+              const isExpanded =
+                toggleBtn.getAttribute("aria-expanded") === "true";
+
+              if (isExpanded) {
+                descriptionEl.textContent = shortText;
+                toggleBtn.textContent = "Read more";
+              } else {
+                descriptionEl.textContent = fullText;
+                toggleBtn.textContent = "Show less";
+              }
+
+              toggleBtn.setAttribute(
+                "aria-expanded",
+                String(!isExpanded)
+              );
+            });
+          }
         }
       }
 
-      if (link) {
-        const updateLink = () => {
-          const message = buildMessage();
-          link.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
+      // ------------------------------------------------------------
+      // WHATSAPP BUTTON
+      // ------------------------------------------------------------
+
+      if (whatsappButton) {
+
+        const updateWhatsAppLink = () => {
+
+          const message = buildWhatsAppMessage();
+
+          whatsappButton.href =
+            `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
         };
 
-        updateLink();
-        link.addEventListener('click', (event) => {
-          event.preventDefault();
-          const message = buildMessage();
-          const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
-          window.open(waUrl, '_blank', 'noopener');
+        // Create the correct link when the page loads
+        updateWhatsAppLink();
+
+        // Rebuild the link when clicked
+        whatsappButton.addEventListener("click", () => {
+          updateWhatsAppLink();
         });
       }
     });
 
-    // ---- Reveal on scroll ----
-    const revealEls = document.querySelectorAll('.reveal, .card');
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('in-view');
-          io.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.15 });
-    revealEls.forEach(el => io.observe(el));
 
-    // ---- Hero 3D parallax on mouse move ----
-    const stage = document.getElementById('heroStage');
+    // ============================================================
+    // REVEAL ELEMENTS ON SCROLL
+    // ============================================================
+
+    const revealEls = document.querySelectorAll(".reveal, .card");
+
+    const io = new IntersectionObserver(
+      (entries) => {
+
+        entries.forEach(entry => {
+
+          if (entry.isIntersecting) {
+
+            entry.target.classList.add("in-view");
+
+            // Stop observing once revealed
+            io.unobserve(entry.target);
+          }
+        });
+
+      },
+      {
+        threshold: 0.15
+      }
+    );
+
+    revealEls.forEach(element => {
+      io.observe(element);
+    });
+
+
+    // ============================================================
+    // HERO 3D PARALLAX
+    // ============================================================
+
+    const stage = document.getElementById("heroStage");
+
     if (stage) {
-      stage.addEventListener('mousemove', (e) => {
+
+      stage.addEventListener("mousemove", (event) => {
+
         const rect = stage.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        stage.querySelectorAll('.floater').forEach(f => {
-          const depth = parseFloat(f.dataset.depth || 0.5);
-          f.style.marginLeft = `${-x * 30 * depth}px`;
-          f.style.marginTop = `${-y * 30 * depth}px`;
+
+        const x =
+          (event.clientX - rect.left) / rect.width - 0.5;
+
+        const y =
+          (event.clientY - rect.top) / rect.height - 0.5;
+
+        stage.querySelectorAll(".floater").forEach(floater => {
+
+          const depth =
+            parseFloat(floater.dataset.depth || 0.5);
+
+          floater.style.marginLeft =
+            `${-x * 30 * depth}px`;
+
+          floater.style.marginTop =
+            `${-y * 30 * depth}px`;
         });
       });
-      stage.addEventListener('mouseleave', () => {
-        stage.querySelectorAll('.floater').forEach(f => {
-          f.style.marginLeft = '0px';
-          f.style.marginTop = '0px';
+
+
+      stage.addEventListener("mouseleave", () => {
+
+        stage.querySelectorAll(".floater").forEach(floater => {
+
+          floater.style.marginLeft = "0px";
+          floater.style.marginTop = "0px";
         });
       });
     }
 
-    // ---- Scroll-linked rotation for hero stage + merging bottles ----
+
+    // ============================================================
+    // SCROLL-LINKED HERO ROTATION + BOTTLE MERGE
+    // ============================================================
+
     let ticking = false;
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
     function onScroll() {
+
       if (!ticking) {
+
         requestAnimationFrame(update);
+
         ticking = true;
       }
     }
-    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
 
     function update() {
+
       const scrollY = window.scrollY;
 
-      // Hero stage subtle rotate as user starts scrolling away
+
+      // ----------------------------------------------------------
+      // HERO ROTATION
+      // ----------------------------------------------------------
+
       if (stage) {
-        const heroProgress = clamp(scrollY / 800, 0, 1);
-        stage.style.transform = `rotateY(${heroProgress * 10}deg) rotateX(${heroProgress * -6}deg)`;
+
+        const heroProgress =
+          clamp(scrollY / 800, 0, 1);
+
+        stage.style.transform =
+          `rotateY(${heroProgress * 10}deg)
+         rotateX(${heroProgress * -6}deg)`;
       }
 
-      // Merge section: two bottles fly toward each other and blend
-      const mergeSection = document.getElementById('story');
-      const mergeOne = document.getElementById('mergeOne');
-      const mergeTwo = document.getElementById('mergeTwo');
+
+      // ----------------------------------------------------------
+      // MERGING BOTTLES
+      // ----------------------------------------------------------
+
+      const mergeSection =
+        document.getElementById("story");
+
+      const mergeOne =
+        document.getElementById("mergeOne");
+
+      const mergeTwo =
+        document.getElementById("mergeTwo");
+
+
       if (mergeSection && mergeOne && mergeTwo) {
-        const rect = mergeSection.getBoundingClientRect();
-        const vh = window.innerHeight;
-        // progress: 0 when section enters bottom of viewport, 1 when centered
-        let progress = 1 - clamp((rect.top - vh * 0.15) / (vh * 0.7), 0, 1);
+
+        const rect =
+          mergeSection.getBoundingClientRect();
+
+        const viewportHeight =
+          window.innerHeight;
+
+
+        // Progress:
+        // 0 = section entering viewport
+        // 1 = section reaches the center
+        let progress =
+          1 -
+          clamp(
+            (rect.top - viewportHeight * 0.15) /
+            (viewportHeight * 0.7),
+            0,
+            1
+          );
+
         progress = clamp(progress, 0, 1);
 
-        const spread = (1 - progress) * 140;
-        const rotate = (1 - progress) * 40;
-        const scale = 0.85 + progress * 0.25;
 
-        mergeOne.style.transform = `translate(-50%,-50%) translateX(${-spread}px) rotate(${-rotate}deg) scale(${scale})`;
-        mergeOne.style.opacity = 0.55 + progress * 0.45;
+        // Bottle animation values
+        const spread =
+          (1 - progress) * 140;
 
-        mergeTwo.style.transform = `translate(-50%,-50%) translateX(${spread}px) rotate(${rotate}deg) scale(${scale})`;
-        mergeTwo.style.opacity = 0.55 + progress * 0.45;
+        const rotation =
+          (1 - progress) * 40;
+
+        const scale =
+          0.85 + progress * 0.25;
+
+        const opacity =
+          0.55 + progress * 0.45;
+
+
+        // Left bottle
+        mergeOne.style.transform =
+          `translate(-50%, -50%)
+         translateX(${-spread}px)
+         rotate(${-rotation}deg)
+         scale(${scale})`;
+
+        mergeOne.style.opacity = opacity;
+
+
+        // Right bottle
+        mergeTwo.style.transform =
+          `translate(-50%, -50%)
+         translateX(${spread}px)
+         rotate(${rotation}deg)
+         scale(${scale})`;
+
+        mergeTwo.style.opacity = opacity;
       }
+
 
       ticking = false;
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Listen for scrolling
+    window.addEventListener(
+      "scroll",
+      onScroll,
+      { passive: true }
+    );
+
+    // Run once when the page loads
     update();
+
   </script>
+
 
 </body>
 
